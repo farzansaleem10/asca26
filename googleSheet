@@ -1,0 +1,64 @@
+function doGet(e) {
+  const sheetName = 'Sheet1'; 
+  // Paste it here, replacing the old line:
+  const spreadsheet = SpreadsheetApp.openById('YOUR_SPREADSHEET_ID_HERE'); // <--- PASTE IT HERE
+  const sheet = spreadsheet.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Sheet not found' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const range = sheet.getDataRange();
+  const values = range.getValues(); 
+
+  if (values.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify([]))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const headers = values[0];
+  const data = [];
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const rowObject = {};
+    for (let j = 0; j < headers.length; j++) {
+      rowObject[headers[j]] = row[j];
+    }
+    data.push(rowObject);
+  }
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const requestBody = JSON.parse(e.postData.contents);
+
+    const sheetName = 'Sheet1'; 
+    // Paste it here, replacing the old line:
+    const spreadsheet = SpreadsheetApp.openById('YOUR_SPREADSHEET_ID_HERE'); // <--- PASTE IT HERE
+    const sheet = spreadsheet.getSheetByName(sheetName);
+
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Sheet not found' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const newRow = [
+      requestBody.event,
+      requestBody.income,
+      requestBody.expenditure,
+      requestBody.fileUrl
+    ];
+    sheet.appendRow(newRow);
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    console.error('Error in doPost:', error.message); 
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
